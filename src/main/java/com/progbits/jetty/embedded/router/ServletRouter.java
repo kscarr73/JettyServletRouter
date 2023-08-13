@@ -20,42 +20,47 @@ public class ServletRouter implements ServletRoutes {
     public static final String CONTENT_TYPE_YAML = "application/x-yaml";
     public static final String CONTENT_TYPE_HTML = "text/html";
     public static final String CONTENT_TYPE_PLAIN = "text/plain";
-    
+
     public static final String FIELD_MATCHES = "matches";
     public static final String FIELD_PAYLOADTYPE = "payloadType";
     public static final String FIELD_RESPONSETYPE = "responseType";
-    
+
+    public static final String HTTP_GET = "GET";
+    public static final String HTTP_POST = "POST";
+    public static final String HTTP_PUT = "PUT";
+    public static final String HTTP_SEARCH = "SEARCH";
+
     private final List<ServletController> servletControllers = new ArrayList<>();
     private final List<Route> routes = new ArrayList<>();
     private final List<ExceptionHandler> errorHandlers = new ArrayList<>();
-    
+
     private String defaultRequestType = CONTENT_TYPE_JSON;
     private String defaultResponseType = CONTENT_TYPE_JSON;
 
     public ServletRoutes setDefaultResponseType(String contentType) {
         defaultResponseType = contentType;
-        
+
         return this;
     }
-    
+
     public ServletRoutes setDefaultRequestType(String contentType) {
         defaultRequestType = contentType;
-        
+
         return this;
     }
-    
+
     public ServletRoutes addServletController(ServletController controller) {
         controller.init();
         controller.routes(this);
         servletControllers.add(controller);
-        
+
         return this;
     }
-    
+
     public List<ServletController> getServletControllers() {
         return servletControllers;
     }
-    
+
     public ServletRoutes addErrorHandler(ExceptionHandler exceptionHandler) {
         errorHandlers.add(exceptionHandler);
 
@@ -73,7 +78,7 @@ public class ServletRouter implements ServletRoutes {
 
         return this;
     }
-    
+
     public ServletRoutes get(String path, Handler handler, String responseType) {
         routes.add(RouteBuilder.createRoute(HttpMethod.GET.asString(), path, handler, null, responseType));
 
@@ -85,7 +90,7 @@ public class ServletRouter implements ServletRoutes {
 
         return this;
     }
-    
+
     public ServletRoutes post(String path, Handler handler, String contentType, String responseType) {
         routes.add(RouteBuilder.createRoute(HttpMethod.POST.asString(), path, handler, contentType, responseType));
 
@@ -97,7 +102,7 @@ public class ServletRouter implements ServletRoutes {
 
         return this;
     }
-    
+
     public ServletRoutes search(String path, Handler handler, String contentType, String responseType) {
         routes.add(RouteBuilder.createRoute(HttpMethod.SEARCH.asString(), path, handler, contentType, responseType));
 
@@ -109,7 +114,7 @@ public class ServletRouter implements ServletRoutes {
 
         return this;
     }
-    
+
     public ServletRoutes put(String path, Handler handler, String contentType, String responseType) {
         routes.add(RouteBuilder.createRoute(HttpMethod.PUT.asString(), path, handler, contentType, responseType));
 
@@ -123,27 +128,35 @@ public class ServletRouter implements ServletRoutes {
     }
 
     @Override
-    public void processRoutes(HttpServletRequest req, HttpServletResponse resp) {
+    public boolean processRoutes(HttpServletRequest req, HttpServletResponse resp) {
+        boolean bRet = false;
+
         for (var entry : routes) {
             ApiObject objMatch = entry.matches(req);
-            
+
             if (objMatch.isSet(FIELD_MATCHES)) {
+                bRet = true;
+
                 try {
                     ApiObject objParams = HttpReqHelper.pullReqParams(req);
                     objMatch.putAll(objParams);
-                    
+
                     JettyEmbeddedRequest jettyReq = new JettyEmbeddedRequest(req, objMatch);
-                    
+
                     if (objMatch.isSet(FIELD_PAYLOADTYPE)) {
                         if (CONTENT_TYPE_JSON.equals(objMatch.getString(FIELD_PAYLOADTYPE))) {
                             jettyReq.setApiPayload(HttpReqHelper.processJsonHttpPayload(req));
                         }
                     }
-                    
+
+                    if (entry.getAuthHandler() != null) {
+                        entry.getAuthHandler().processAuth(jettyReq);
+                    }
+
                     JettyEmbeddedResponse jettyResp = new JettyEmbeddedResponse(resp);
-                    
+
                     entry.getHandler().handle(jettyReq, jettyResp);
-    
+
                     if (objMatch.isSet(FIELD_RESPONSETYPE)) {
                         if (CONTENT_TYPE_JSON.equals(objMatch.getString(FIELD_RESPONSETYPE)) && jettyResp.getApiPayload() != null) {
                             HttpReqHelper.sendJson(resp, jettyResp.getStatus(), jettyResp.getApiPayload());
@@ -165,6 +178,8 @@ public class ServletRouter implements ServletRoutes {
                 break;
             }
         }
+
+        return bRet;
     }
 
     private void processExceptionHandlers(Throwable thr, HttpServletResponse resp) {

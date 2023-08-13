@@ -8,7 +8,10 @@ import jakarta.servlet.http.HttpServletRequest;
  * @author scarr
  */
 public interface Route {
+
     public Handler getHandler();
-    
+
+    public AuthenticationHandler getAuthHandler();
+
     public ApiObject matches(HttpServletRequest req);
 }
