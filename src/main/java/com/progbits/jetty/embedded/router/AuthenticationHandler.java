@@ -1,6 +1,6 @@
 package com.progbits.jetty.embedded.router;
 
-import com.progbits.jetty.embedded.execeptions.AuthenticationException;
+import com.progbits.jetty.embedded.execeptions.ApplicationException;
 
 /**
  *
@@ -8,6 +8,6 @@ import com.progbits.jetty.embedded.execeptions.AuthenticationException;
  */
 public interface AuthenticationHandler {
 
-    boolean processAuth(JettyEmbeddedRequest req) throws AuthenticationException;
+    boolean processAuth(JettyEmbeddedRequest req) throws ApplicationException;
 
 }

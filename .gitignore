@@ -9,3 +9,4 @@ bin/
 .vscode/
 
 .obsidian
+/target/
