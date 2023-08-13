@@ -4,7 +4,7 @@
 
     <groupId>com.progbits.jetty.router</groupId>
     <artifactId>JettyServletRouter</artifactId>
-    <version>1.0.5</version>
+    <version>1.0.6</version>
     <packaging>jar</packaging>
 
     <properties>
@@ -15,9 +15,9 @@
 
     <distributionManagement>
         <repository>
-            <id>internal.repo</id>
+            <id>progbits</id>
             <name>Internal Repo</name>
-            <url>${mvnRepo}</url>
+            <url>https://archiva.progbits.com/coffer/repository/internal/</url>
         </repository>
     </distributionManagement>
 	
