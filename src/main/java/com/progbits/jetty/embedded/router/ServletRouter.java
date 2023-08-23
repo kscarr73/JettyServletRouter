@@ -166,15 +166,15 @@ public class ServletRouter implements ServletRoutes {
                 bRet = true;
 
                 try {
-                    ApiObject objParams = HttpReqHelper.pullReqParams(req);
-                    objMatch.putAll(objParams);
-
                     JettyEmbeddedRequest jettyReq = new JettyEmbeddedRequest(req, objMatch);
 
                     if (objMatch.isSet(FIELD_PAYLOADTYPE)) {
                         if (CONTENT_TYPE_JSON.equals(objMatch.getString(FIELD_PAYLOADTYPE))) {
                             jettyReq.setApiPayload(HttpReqHelper.processJsonHttpPayload(req));
                         }
+                    } else {
+                        ApiObject objParams = HttpReqHelper.pullReqParams(req);
+                        objMatch.putAll(objParams);
                     }
 
                     JettyEmbeddedResponse jettyResp = new JettyEmbeddedResponse(resp);
