@@ -12,6 +12,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -72,8 +73,12 @@ public class HttpReqHelper {
         try {
             resp.setStatus(status);
             resp.setContentType(contentType);
-            resp.setContentLength(subject.length());
-            resp.getWriter().append(subject);
+
+            resp.setCharacterEncoding("UTF-8");
+            byte[] subjectSend = subject.getBytes(StandardCharsets.UTF_8);
+
+            resp.setContentLength(subjectSend.length);
+            resp.getOutputStream().write(subjectSend);
         } catch (IOException aex) {
             throw new ApplicationException(400, aex.getMessage());
         }
@@ -90,4 +95,3 @@ public class HttpReqHelper {
         out.flush();
     }
 }
-

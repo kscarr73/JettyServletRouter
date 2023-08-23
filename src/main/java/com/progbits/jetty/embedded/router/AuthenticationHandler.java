@@ -8,6 +8,6 @@ import com.progbits.jetty.embedded.execeptions.ApplicationException;
  */
 public interface AuthenticationHandler {
 
-    boolean processAuth(JettyEmbeddedRequest req) throws ApplicationException;
+    boolean processAuth(JettyEmbeddedRequest req, JettyEmbeddedResponse resp) throws ApplicationException;
 
 }

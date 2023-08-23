@@ -177,11 +177,16 @@ public class ServletRouter implements ServletRoutes {
                         }
                     }
 
-                    if (entry.getAuthHandler() != null) {
-                        entry.getAuthHandler().processAuth(jettyReq);
-                    }
-
                     JettyEmbeddedResponse jettyResp = new JettyEmbeddedResponse(resp);
+
+                    if (entry.getAuthHandler() != null) {
+                        if (!entry.getAuthHandler().processAuth(jettyReq, jettyResp)) {
+                            // If processAuth returns false, then 
+                            // return from function with true
+                            // And stop processing, because we have done a redirect
+                            return true;
+                        }
+                    }
 
                     entry.getHandler().handle(jettyReq, jettyResp);
 
@@ -198,7 +203,7 @@ public class ServletRouter implements ServletRoutes {
 
                     }
                 } catch (Exception ex) {
-                    processExceptionHandlers(ex, resp);
+                    processExceptionHandlers(ex, req, resp);
                 }
                 break;
             }
@@ -207,9 +212,9 @@ public class ServletRouter implements ServletRoutes {
         return bRet;
     }
 
-    private void processExceptionHandlers(Throwable thr, HttpServletResponse resp) {
+    private void processExceptionHandlers(Throwable thr, HttpServletRequest req, HttpServletResponse resp) {
         for (var entry : errorHandlers) {
-            if (entry.handle(thr, resp)) {
+            if (entry.handle(thr, req, resp)) {
                 break;
             }
         }
