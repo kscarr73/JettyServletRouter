@@ -1,6 +1,7 @@
 package com.progbits.jetty.embedded.router;
 
 import com.progbits.api.model.ApiObject;
+import com.progbits.jetty.embedded.execeptions.ApplicationException;
 import com.progbits.jetty.embedded.routing.ServletRoutes;
 import com.progbits.jetty.embedded.servlet.ContentHandler;
 import com.progbits.jetty.embedded.servlet.DefaultHtmlContentHandler;
@@ -209,6 +210,14 @@ public class ServletRouter implements ServletRoutes {
             }
         }
 
+        try {
+            if (!bRet) {
+                throw new ApplicationException(404, "Endpoint Not Found");
+            }
+        } catch (Exception ex) {
+            processExceptionHandlers(ex, req, resp);
+        }
+        
         return bRet;
     }
 
